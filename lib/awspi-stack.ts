@@ -28,7 +28,7 @@ export class AwspiStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
     });
 
-    const pi_glue_role = new iam.Role(this, 'pi_glue_role', {
+    const pi_glue_role = new iam.Role(this, 'pi-glue-role', {
       assumedBy: new iam.ServicePrincipal('glue.amazonaws.com'),
       description: 'Role for Glue services to access S3'      
     });
@@ -43,7 +43,7 @@ export class AwspiStack extends cdk.Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonAthenaFullAccess')
     );
 
-    const pidb = new glue.CfnDatabase(this, 'pi_db', {
+    const pidb = new glue.CfnDatabase(this, 'pidb', {
       catalogId: this.account,
       databaseInput: {
         description: 'pidb',
@@ -51,30 +51,7 @@ export class AwspiStack extends cdk.Stack {
       },
     });
 
-    const crawler = new glue.CfnCrawler(this, 'pi_glue_crawler', {
-      databaseName: 'pidb',
-      role: pi_glue_role.roleArn,
-      targets: {
-        s3Targets: [{ path: "s3://" + byob_s3_bucket.bucketName}]
-      }
-    });
-
-    //Create athena configuration    
-    const athenaworkgrp = new athena.CfnWorkGroup(this, 'pi-athena-workgroup', {
-      name: 'PIWorkgroup',
-      description: 'PI WorkGroup',
-      state: 'ENABLED',
-      workGroupConfiguration: {
-          requesterPaysEnabled: true,
-          resultConfiguration: {
-              outputLocation: `s3://${athena_out_bucket.bucketName}/athena/results/`
-          }
-        }
-      })
-      
-    /*
-  
-    const crawler = new glue.CfnCrawler(this, 'pi_glue_crawler', {
+    const crawler = new glue.CfnCrawler(this, 'pi-glue-crawler', {
       databaseName: 'pidb',
       role: pi_glue_role.roleArn,
       targets: {
@@ -127,6 +104,6 @@ export class AwspiStack extends cdk.Stack {
           ByobLocationPolicy:getByobBucketLocationPolicyStatementDoc
         },
       });
-*/
+
   }
 }
