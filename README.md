@@ -1,17 +1,20 @@
-# Welcome to your CDK TypeScript project
+# pistarter aws stack 
+Note: This stack is as-is. Please change the cdk code to fine tune perms in cdk as restrictive as possible. 
 
-This is a blank project for CDK development with TypeScript.
+## clone the project 
+git clone https://github.com/kamipatel/awspi  
+cd awspi  
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Run following commands to install the stack in AWS
+- Configure your aws connection  
+aws configure
 
-## Useful commands
+- Bootstrap AWS instance. Replace {REPLACE-WITH-AWS-ACCOUNT-NUMBER} with AWS account number and {aws-region} with region where you want to install the stack  
+cdk bootstrap aws://{REPLACE-WITH-AWS-ACCOUNT-NUMBER}/{aws-region}
+e.g. cdk bootstrap aws://ABC11111111/us-east-1
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+- Depoy this stack. Replace {REPLACE-WITH-LMA-ORG-ID} with your PBO/LMA org id  
+cdk deploy --parameters LMOORGID={REPLACE-WITH-LMA-ORG-ID}
+e.g. cdk deploy --parameters LMOORGID=0012200009AB0010
 
 
-cdk bootstrap aws://**/us-east-1

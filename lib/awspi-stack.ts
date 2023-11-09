@@ -4,6 +4,9 @@ import * as glue from 'aws-cdk-lib/aws-glue';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as athena from 'aws-cdk-lib/aws-athena';
+import {
+  aws_athena as athenaCfn
+} from 'aws-cdk-lib';
 
 export class AwspiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -105,5 +108,88 @@ export class AwspiStack extends cdk.Stack {
         },
       });
 
-  }
+      const group = new iam.Group(this, 'pi-group', {
+        managedPolicies: [],
+      });
+    
+      // Daily summary bucket CRMA access policy
+      const athenaSalesforceAccessPolicyStatement = new iam.PolicyStatement();
+      athenaSalesforceAccessPolicyStatement.addResources(`arn:aws:athena:*:${this.account}:workgroup/PIWorkgroup`);      
+      athenaSalesforceAccessPolicyStatement.addResources(`${byob_s3_bucket.bucketArn}/*`);
+      athenaSalesforceAccessPolicyStatement.addResources(`${athena_out_bucket.bucketArn}/*`);     
+      athenaSalesforceAccessPolicyStatement.addResources(`*`);   
+      athenaSalesforceAccessPolicyStatement.addActions("s3:*");
+      athenaSalesforceAccessPolicyStatement.addActions("athena:GetWorkGroup");
+      athenaSalesforceAccessPolicyStatement.addActions("athena:StartQueryExecution");
+      athenaSalesforceAccessPolicyStatement.addActions("athena:StopQueryExecution");
+      athenaSalesforceAccessPolicyStatement.addActions("athena:GetQueryExecution");
+      athenaSalesforceAccessPolicyStatement.addActions("athena:GetQueryResults");
+      athenaSalesforceAccessPolicyStatement.addActions("athena:GetDataCatalog");
+      athenaSalesforceAccessPolicyStatement.addActions("s3:PutObject");
+      athenaSalesforceAccessPolicyStatement.addActions("s3:GetObject");
+      athenaSalesforceAccessPolicyStatement.addActions("glue:*");
+
+
+//    athenaSalesforceAccessPolicyStatement.addResources(`*`);    
+//    athenaSalesforceAccessPolicyStatement.addActions("s3:*");
+//    athenaSalesforceAccessPolicyStatement.addActions("glue:*");
+      
+/*
+      const athenaS3SalesforceAccessPolicyStatement = new iam.PolicyStatement();
+//      athenaS3SalesforceAccessPolicyStatement.addResources(`${byob_s3_bucket.bucketArn}/*`);
+      athenaS3SalesforceAccessPolicyStatement.addResources(`${athena_out_bucket.bucketArn}/*`);      
+      athenaS3SalesforceAccessPolicyStatement.addActions("s3:GetObject");
+      athenaS3SalesforceAccessPolicyStatement.addActions("s3:PutObject");
+
+      const athenaGlueSalesforceAccessPolicyStatement = new iam.PolicyStatement();
+      athenaS3SalesforceAccessPolicyStatement.addResources(`${athena_out_bucket.bucketArn}/*`);      
+      athenaS3SalesforceAccessPolicyStatement.addActions("s3:GetObject");
+      athenaS3SalesforceAccessPolicyStatement.addActions("s3:PutObject");
+      */
+
+      const athenaSalesforceAccessPolicyStatementDoc = new iam.PolicyDocument({
+        statements: [
+          athenaSalesforceAccessPolicyStatement
+        ],
+      });
+  
+      const policy = new iam.Policy(this, 'SalesforceAnalyticsUserPolicy', {
+        document: athenaSalesforceAccessPolicyStatementDoc      
+      });
+
+      // 👇 Create User
+      const user = new iam.User(this, 'CRMAnalyticsUser', {
+        userName: 'CRMAnalyticsUser',
+        groups: [group]
+      });
+      policy.attachToUser(user);
+  
+
+  let loginQuery: string  = `CREATE OR REPLACE VIEW "login_view" AS ( 
+  select package_id, "date"(timestamp_derived) for_day_dt, organization_id, user_type, "count"(DISTINCT user_id_token) distinct_users_token_num 
+  FROM awspistack_pibyob15337df2_1e1qy60nx3ah9 
+  where cast(timestamp_derived as date) > date_add(‘day’, -60, current_date) 
+  GROUP BY package_id, organization_id, user_type, user_agent, "date"(timestamp_derived))`;
+
+  /*
+  loginQuery = `CREATE OR REPLACE VIEW "logins" AS ( 
+    select * 
+    FROM awspistack_pibyob15337df2_1e1qy60nx3ah9 
+    )`;
+*/
+
+  const createOrRelaceViewQuery = new athenaCfn.CfnNamedQuery(
+    this,
+    'CreateOrReplaceView',
+    {
+      name: 'loginview',
+      database: 'pidb',
+      queryString: loginQuery,
+      description: 'Login view',
+      workGroup: 'PIWorkgroup'
+    },
+  );  
+
+
+}  
 }
