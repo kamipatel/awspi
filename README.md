@@ -1,11 +1,14 @@
 # PI starter aws stack 
 Note: This stack is as-is. Please change the cdk code to fine tune perms in cdk as restrictive as possible. 
 
-## Clone the project 
+### Clone the project 
 git clone https://github.com/kamipatel/awspi    
 cd awspi  
 
-## Run following commands to install the stack in AWS   
+### Update the cloud formation stack as needed 
+Under lib directory update awspi-stack.ts
+
+### Run following commands to install the stack in AWS   
 - Configure your aws connection     
 aws configure
 
@@ -16,5 +19,7 @@ e.g. cdk bootstrap aws://ABC11111111/us-east-1
 - Depoy this stack. Replace {REPLACE-WITH-LMA-ORG-ID} with your PBO/LMA org id  
 cdk deploy --parameters LMOORGID={REPLACE-WITH-LMA-ORG-ID}
 e.g. cdk deploy --parameters LMOORGID=0012200009AB0010
+
+
 
 
