@@ -1,5 +1,5 @@
 # PI starter aws stack 
-Note: This stack is as-is. Please change the cdk code to fine tune perms in cdk as restrictive as possible. 
+Note: This stack is provided as-is and as a sample reference. Please change the cdk code to fine tune perms in cdk as restrictive as possible. 
 
 ### Clone the project 
 git clone https://github.com/kamipatel/awspi    
